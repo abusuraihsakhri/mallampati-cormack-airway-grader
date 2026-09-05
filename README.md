@@ -1,6 +1,6 @@
 # Mallampati Cormack Airway Grader
 
-> **Domain:** Diagnostic Radiology & Medical Imaging AI  
+> **Domain:** Diagnostic Radiology & Medical Imaging AI
 > **Reference Guidelines & Standards:** `American College of Radiology (ACR) RADS & Fleischner Society`
 
 <div align="center">
@@ -31,64 +31,105 @@ License: MIT
 
 ### 🔬 Analytical Functions
 
-- **`calculate_metrics()`**: Core domain algorithm for mallampati-cormack-airway-grader.
-- **`process_single()`** — calculates and validates process_single parameters.
-- **`process_batch()`** — calculates and validates process_batch parameters.
-- **`main()`** — calculates and validates main parameters.
+- **`calculate_metrics()`**: Core domain algorithm for airway grading with weighted scoring.
+- **`process_single()`** — Evaluates a single case with provided parameters.
+- **`process_batch()`** — Processes CSV files with multiple records.
+- **`main()`** — CLI entry point for single and batch operations.
+
+### 🏗️ Enterprise Architecture
+
+- **Multi-Agent Supervisor System**: Coordinates specialized workers for comprehensive evaluation.
+- **PHI Outbound Guard**: Prevents protected health information from leaving the system.
+- **HMAC-SHA256 Audit Trail**: Tamper-evident cryptographic logging of all operations.
+- **FastAPI REST API**: OpenAPI 3.1 compatible REST endpoints.
+- **Prometheus Metrics**: Operational telemetry export.
 
 ---
 
 ## 📐 Mathematical Formulation & Logic
 
+The core algorithm computes a weighted score from input parameters:
+
 ```text
-  score = primary_val
-  rounded_score = round(score, 2)
-  res = calculate_metrics(**kwargs)
-  calc_res = calculate_metrics(**r)
+score = v1 + v2 * (1/2) + v3 * (1/3) + ...
+```
+
+Classification tiers:
+- **Low / Standard** (score < 10.0): Standard monitoring
+- **Moderate / Intermediate** (10.0 ≤ score < 25.0): Close observation
+- **High / Severe** (score ≥ 25.0): Urgent clinical intervention
+
+---
+
+## 💻 Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/abusuraihsakhri/mallampati-cormack-airway-grader.git
+cd mallampati-cormack-airway-grader
+
+# Install dependencies
+pip install fastapi uvicorn pydantic pytest
+
+# Set audit key (required for production)
+export AUDIT_SECRET_KEY="your-secure-audit-key-min-16-chars"
 ```
 
 ---
 
 ## 💻 CLI Quickstart & Usage
 
-### 1. Guided Interactive Mode
+### 1. Single Case Evaluation
 ```bash
-python cli.py
+python airway_grader.py single --v1 14.5 --v2 4.2 --v3 1.8
 ```
 
-### 2. Direct Parameterized Evaluation
+### 2. Batch CSV Processing
 ```bash
-python cli.py --task-id <value> --target <value> --primary <value> --secondary <value>
+python airway_grader.py batch -i sample.csv -o results.csv
+```
+
+### 3. Enterprise CLI with Audit Trail
+```bash
+# Set audit key
+export AUDIT_SECRET_KEY="your-secure-audit-key"
+
+# Run audit
+python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
+
+# Batch processing
+python cli.py batch -i sample.csv -o results.csv
+
+# Verify audit trail
+python cli.py verify-audit
+
+# Start API server
+python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
 ### Parameter Reference
-- `--task-id`: Specifies input measurement or parameter value.
-- `--target`: Specifies input measurement or parameter value.
-- `--primary`: Specifies input measurement or parameter value.
-- `--secondary`: Specifies input measurement or parameter value.
-- `--critical`: Specifies input measurement or parameter value.
-- `--status`: Specifies input measurement or parameter value.
-- `--input`: Specifies input measurement or parameter value.
-- `--output`: Specifies input measurement or parameter value.
+- `--v1`: Primary parameter (Mallampati score)
+- `--v2`: Secondary parameter (thyromental distance)
+- `--v3`: Tertiary parameter (Cormack-Lehane grade)
 
 ### Input Data Schema
 
 | Field | Description | Requirement |
 |:------|:------------|:------------|
-| `Patient_ID` | Parameter / observation metric | Required |
-| `v1` | Parameter / observation metric | Required |
-| `v2` | Parameter / observation metric | Required |
-| `v3` | Parameter / observation metric | Required |
+| `Patient_ID` | Patient identifier | Required |
+| `v1` | Primary measurement (Mallampati) | Required |
+| `v2` | Secondary measurement (thyromental distance) | Required |
+| `v3` | Tertiary measurement (Cormack-Lehane) | Optional |
 
 ---
 
 ## 🛡️ Security & Enterprise Architecture
 
-* **Zero-PHI Outbound Interceptor:** Active AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation and state transition.
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances (`llama3`, `mistral`), Claude 3.5 Sonnet, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
+* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
+* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation.
+* **Input Validation:** Bounds checking and sanitization for all numeric inputs.
+* **Path Traversal Protection:** File path validation prevents directory traversal attacks.
+* **Configurable Audit Key:** Secure key management via environment variable.
 
 ---
 
@@ -97,13 +138,21 @@ python cli.py --task-id <value> --target <value> --primary <value> --secondary <
 Run the automated test suite:
 
 ```bash
+# Set test audit key
+export AUDIT_SECRET_KEY="test-audit-key-for-testing-only"
+
+# Run all tests
 pytest -v
+
+# Run specific test files
+pytest test_airway_grader.py -v
+pytest tests/ -v
 ```
 
 Execute high-throughput batch simulation benchmarks:
 
 ```bash
-python simulator.py --tasks 1000 --concurrency 8
+python simulator.py 1000
 ```
 
 ---
@@ -112,5 +161,44 @@ python simulator.py --tasks 1000 --concurrency 8
 
 ```bash
 docker build -t mallampati-cormack-airway-grader .
-docker run -p 8000:8000 mallampati-cormack-airway-grader
+docker run -p 8000:8000 -e AUDIT_SECRET_KEY="your-secure-key" mallampati-cormack-airway-grader
 ```
+
+---
+
+## 📁 Project Structure
+
+```
+mallampati-cormack-airway-grader/
+├── airway_grader.py          # Core grading algorithm
+├── cli.py                    # Enterprise CLI interface
+├── simulator.py              # Load testing simulator
+├── enrichment.py             # Feature enrichment modules
+├── sample.csv                # Sample input data
+├── test_airway_grader.py     # Core algorithm tests
+├── agents/
+│   ├── __init__.py           # Package initialization
+│   ├── api.py                # FastAPI REST server
+│   ├── base.py               # Security, PHI guard, audit trail
+│   ├── models.py             # Pydantic data models
+│   ├── supervisor.py         # Multi-agent orchestrator
+│   ├── workers.py            # Specialized evaluation workers
+│   ├── llm_factory.py        # LLM integration factory
+│   ├── learning.py           # Bayesian calibration engine
+│   ├── metrics.py            # Prometheus metrics collector
+│   └── streamer.py           # WebSocket telemetry broadcaster
+├── tests/
+│   ├── test_mallampati_cormack_airway_grader.py
+│   └── test_enrichment.py
+├── web/
+│   └── index.html            # Operations console UI
+├── Dockerfile
+├── docker-compose.yml
+└── LICENSE
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.

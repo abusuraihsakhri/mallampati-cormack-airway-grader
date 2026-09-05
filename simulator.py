@@ -1,9 +1,15 @@
 """
 Distributed Component High-Throughput Traffic & Stress Testing Simulator for Mallampati Cormack Airway Grader.
 """
+import os
 import time
 import random
 import sys
+
+# Set default audit key for simulator if not provided
+if not os.getenv("AUDIT_SECRET_KEY"):
+    os.environ["AUDIT_SECRET_KEY"] = "simulator-dev-key-change-in-production-2026"
+
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import PHIGuard, SecurityException, AuditLogger

@@ -3,9 +3,13 @@ Automated Pytest Test Suite for Mallampati Cormack Airway Grader.
 Domain: Radiology & Neuroimaging Systems
 Standard: ACR RADS / Fleischner Society / ASPECTS Guidelines
 """
+import os
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Set test audit key before importing agents
+os.environ.setdefault("AUDIT_SECRET_KEY", "test-audit-key-for-testing-only-2026")
 
 import pytest
 from agents.base import PHIGuard, AuditLogger, SecurityException

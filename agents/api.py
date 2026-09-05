@@ -1,12 +1,17 @@
 """
 FastAPI REST API Server for Mallampati Cormack Airway Grader.
 """
+import os
 from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
+
+# Set default audit key for API if not provided
+if not os.getenv("AUDIT_SECRET_KEY"):
+    os.environ["AUDIT_SECRET_KEY"] = "api-dev-key-change-in-production-2026"
 
 supervisor = SystemSupervisor(model_provider="mock")
 
