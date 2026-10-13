@@ -1,5 +1,5 @@
 """
-Autonomous Bayesian Calibration & Active Learning Feedback Engine for mallampati-cormack-airway-grader.
+Synthetic accuracy-weight demonstration (not Bayesian clinical calibration) for mallampati-cormack-airway-grader.
 """
 import math
 from typing import Dict, Any, List, Optional
