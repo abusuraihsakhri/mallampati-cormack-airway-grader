@@ -20,7 +20,7 @@ class InvariantQCWorker:
                 origin_worker="InvariantQCWorker",
                 urgency=UrgencyLevel.ELEVATED,
                 summary="Primary Metric Threshold Exceeded",
-                technical_details=f"Primary measurement ({payload.primary_metric:.2f}) exceeds upper reference limit (25.00) under ACR RADS / Fleischner Society / ASPECTS Guidelines.",
+                technical_details=f"Primary measurement ({payload.primary_metric:.2f}) exceeds upper reference limit (25.00) under nonclinical synthetic threshold rules.",
                 actionable_remediation="Review demo input values; no clinical action is indicated.",
             ))
         return alerts
@@ -57,7 +57,7 @@ class ProtocolConformanceWorker:
                 origin_worker="ProtocolConformanceWorker",
                 urgency=UrgencyLevel.ELEVATED,
                 summary="Protocol Conformance Discordance Detected",
-                technical_details=f"Descriptor '{payload.status_descriptor}' indicates discordance with ACR RADS / Fleischner Society / ASPECTS Guidelines standards.",
+                technical_details=f"Descriptor '{payload.status_descriptor}' indicates discordance with nonclinical synthetic threshold rules standards.",
                 actionable_remediation="Review the synthetic descriptor used by this demonstration.",
             ))
         return alerts
