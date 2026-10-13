@@ -115,21 +115,28 @@ class AuditTrail:
         return copy.deepcopy(self.logs)
 
 
-GLOBAL_AUDIT = AuditTrail()
+GLOBAL_AUDIT: Optional[AuditTrail] = None
 
 
 class AuditLogger:
     @staticmethod
+    def _audit() -> AuditTrail:
+        global GLOBAL_AUDIT
+        if GLOBAL_AUDIT is None:
+            GLOBAL_AUDIT = AuditTrail()
+        return GLOBAL_AUDIT
+
+    @staticmethod
     def log(actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        return GLOBAL_AUDIT.log(actor, actor_tier, event_type, details)
+        return AuditLogger._audit().log(actor, actor_tier, event_type, details)
 
     @staticmethod
     def get_trail() -> List[Dict[str, Any]]:
-        return GLOBAL_AUDIT.get_trail()
+        return AuditLogger._audit().get_trail()
 
     @staticmethod
     def verify_integrity() -> bool:
-        return GLOBAL_AUDIT.verify_integrity()
+        return AuditLogger._audit().verify_integrity()
 
 
 class ActionExecutor:
