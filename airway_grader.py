@@ -43,9 +43,11 @@ def _grade(value: Any, field: str) -> Optional[int]:
         if not re.fullmatch(r"[1-4]", value.strip()):
             raise ValueError(f"{field} must be an integer from 1 to 4")
         return int(value.strip())
-    if not isinstance(value, (int, float)) or not math.isfinite(value):
+    if isinstance(value, int):
+        if 1 <= value <= 4:
+            return value
         raise ValueError(f"{field} must be an integer from 1 to 4")
-    if int(value) != value or not (1 <= value <= 4):
+    if not isinstance(value, float) or not math.isfinite(value) or value not in (1.0, 2.0, 3.0, 4.0):
         raise ValueError(f"{field} must be an integer from 1 to 4")
     return int(value)
 
