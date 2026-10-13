@@ -22,6 +22,15 @@ def test_hmac_detects_content_mutation():
     assert not trail.verify_integrity()
 
 
+def test_hmac_rejects_field_boundary_substitution():
+    trail = AuditTrail(secret_key="unit-test-secret-with-adequate-length")
+    trail.log("alice|admin", "tier", "case", {"status": "ok"})
+    assert trail.verify_integrity()
+    trail.logs[0]["actor"] = "alice"
+    trail.logs[0]["actor_tier"] = "admin|tier"
+    assert not trail.verify_integrity()
+
+
 def test_invalid_numeric_metric_rejected():
     import pytest
     from pydantic import ValidationError
