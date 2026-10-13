@@ -35,9 +35,9 @@ class ChatRequest(BaseModel):
 
 def require_demo_token(authorization: Optional[str] = Header(default=None)):
     expected = os.getenv("API_ACCESS_TOKEN")
-    if not expected or not os.getenv("AUDIT_SECRET_KEY"):
+    if not expected or len(expected) < 16 or not os.getenv("AUDIT_SECRET_KEY"):
         raise HTTPException(status_code=503, detail="Demo API credentials are not configured")
-    supplied = authorization.removeprefix("Bearer ") if authorization else ""
+    supplied = authorization[7:] if authorization and authorization.startswith("Bearer ") else ""
     if not hmac.compare_digest(supplied, expected):
         raise HTTPException(status_code=401, detail="Invalid or missing bearer token")
 
