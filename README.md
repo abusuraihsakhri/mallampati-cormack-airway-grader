@@ -21,7 +21,7 @@ The modified Mallampati assessment is conventionally performed seated, with the 
 
 A thyromental-distance value, when provided, is preserved as a measurement only. This application does not determine intubation difficulty, airway management, or urgency. Airway decisions require full clinical assessment and applicable local protocols.
 
-Sources: [Modified Mallampati overview (PubMed)](https://pubmed.ncbi.nlm.nih.gov/30171286/) and [laryngoscopy grading definitions (PMC)](https://pmc.ncbi.nlm.nih.gov/articles/PMC4411835/).
+Sources: [Modified Mallampati overview (PubMed)](https://pubmed.ncbi.nlm.nih.gov/30171286/) and [laryngoscopy grading definitions (PMC)](https://pubmed.ncbi.nlm.nih.gov/6507827/).
 
 ## Python CLI
 
