@@ -109,7 +109,7 @@ def process_batch(input_csv: str, output_csv: str) -> int:
     with open(input_path, newline="", encoding="utf-8-sig") as handle:
         reader = csv.DictReader(handle)
         fields = list(reader.fieldnames or [])
-        if not fields or len(fields) != len(set(fields)):
+        if not fields or any(not header for header in fields) or len(fields) != len(set(fields)):
             raise ValueError("CSV must have unique, nonempty column headers")
         if not ({"mallampati", "cormack_lehane"} & set(fields)):
             raise ValueError("CSV needs a mallampati or cormack_lehane column")
