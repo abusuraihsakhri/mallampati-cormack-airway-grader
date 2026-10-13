@@ -114,7 +114,14 @@ form.addEventListener("submit", (event) => {
   error.textContent = "";
   const mp = document.getElementById("mallampati").value;
   const cl = document.getElementById("cormack").value;
-  const rawDistance = document.getElementById("tmd").value.trim();
+  const distanceField = document.getElementById("tmd");
+  const rawDistance = distanceField.value.trim();
+  if (distanceField.validity.badInput) {
+    error.textContent = "Enter a valid numeric thyromental distance.";
+    lastResult = null;
+    exportButton.disabled = true;
+    return;
+  }
   if (!mp && !cl) {
     error.textContent = "Select at least one observed grade.";
     lastResult = null;
