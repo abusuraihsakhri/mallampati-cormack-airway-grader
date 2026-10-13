@@ -1,110 +1,116 @@
+import csv
+import json
+import subprocess
+import sys
+
 import pytest
-from airway_grader import calculate_metrics, process_batch, validate_numeric_input, safe_file_path
+
+from airway_grader import (
+    CORMACK_LEHANE, MALLAMPATI, calculate_metrics, main, process_batch,
+    safe_file_path,
+)
 
 
-def test_airway_grader_single():
-    res = calculate_metrics(v1=12.0, v2=4.0)
-    assert "score" in res
-    assert "classification" in res
-    assert res["score"] > 0
+@pytest.mark.parametrize("grade", [1, 2, 3, 4])
+def test_all_modified_mallampati_classes(grade):
+    observed = calculate_metrics(mallampati=grade)
+    assert observed["mallampati_class"] == grade
+    assert observed["mallampati_description"] == MALLAMPATI[grade]
+    assert observed["cormack_lehane_grade"] is None
+    assert "score" not in observed
+    assert "clinical_recommendation" not in observed
 
 
-def test_airway_grader_batch(tmp_path):
-    csv_in = tmp_path / "in.csv"
-    csv_out = tmp_path / "out.csv"
-    csv_in.write_text("Patient,v1,v2\nPat_001,15.0,3.0\nPat_002,5.0,1.0\n", encoding="utf-8")
-
-    process_batch(str(csv_in), str(csv_out))
-    assert csv_out.exists()
-    content = csv_out.read_text(encoding="utf-8")
-    assert "Pat_001" in content
-    assert "score" in content
+@pytest.mark.parametrize("grade", [1, 2, 3, 4])
+def test_all_original_cormack_lehane_grades(grade):
+    observed = calculate_metrics(cormack_lehane=str(grade))
+    assert observed["cormack_lehane_grade"] == grade
+    assert observed["cormack_lehane_description"] == CORMACK_LEHANE[grade]
 
 
-def test_calculate_metrics_classification_low():
-    """Test low score classification."""
-    res = calculate_metrics(v1=5.0)
-    assert res["classification"] == "Low / Standard"
-    assert res["score"] == 5.0
+def test_scales_are_independent():
+    observed = calculate_metrics(mallampati=1, cormack_lehane=4, thyromental_distance_cm=6.5)
+    assert observed["mallampati_class"] == 1
+    assert observed["cormack_lehane_grade"] == 4
+    assert observed["thyromental_distance_cm"] == 6.5
+    assert "neither" in observed["interpretation_note"].lower()
 
 
-def test_calculate_metrics_classification_moderate():
-    """Test moderate score classification."""
-    res = calculate_metrics(v1=15.0)
-    assert res["classification"] == "Moderate / Intermediate"
+@pytest.mark.parametrize("invalid", [0, 5, -1, 2.1, "II", "3.0", "nan", True, [], float("inf"), float("nan")])
+def test_invalid_grade_rejected(invalid):
+    with pytest.raises(ValueError, match="integer from 1 to 4"):
+        calculate_metrics(mallampati=invalid)
 
 
-def test_calculate_metrics_classification_high():
-    """Test high score classification."""
-    res = calculate_metrics(v1=30.0)
-    assert res["classification"] == "High / Severe"
+@pytest.mark.parametrize("invalid", [0, -2, "NaN", "inf", "not-a-number", True])
+def test_invalid_distance_rejected(invalid):
+    with pytest.raises(ValueError, match="positive finite"):
+        calculate_metrics(mallampati=2, thyromental_distance_cm=invalid)
 
 
-def test_calculate_metrics_weighted_score():
-    """Test that secondary values are weighted correctly."""
-    res = calculate_metrics(v1=10.0, v2=4.0)
-    # score = 10.0 + 4.0 * (1/2) = 12.0
-    assert res["score"] == 12.0
+def test_at_least_one_grade_required():
+    with pytest.raises(ValueError, match="At least one observed grade"):
+        calculate_metrics(thyromental_distance_cm=6.5)
 
 
-def test_calculate_metrics_no_numeric_raises():
-    """Test that no numeric input raises ValueError."""
-    with pytest.raises(ValueError, match="At least one numeric parameter is required"):
-        calculate_metrics(name="test", label="abc")
+def test_batch_csv_with_invalid_row(tmp_path):
+    source = tmp_path / "input.csv"
+    destination = tmp_path / "output.csv"
+    source.write_text(
+        "mallampati,cormack_lehane,thyromental_distance_cm\n"
+        "1,4,6.5\n"
+        "5,2,7.0\n"
+        ",3,\n",
+        encoding="utf-8",
+    )
+    assert process_batch(str(source), str(destination)) == 1
+    with destination.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == 3
+    assert rows[0]["mallampati_description"] == MALLAMPATI[1]
+    assert rows[0]["cormack_lehane_description"] == CORMACK_LEHANE[4]
+    assert rows[1]["error"]
+    assert rows[2]["error"] == ""
 
 
-def test_validate_numeric_input_valid():
-    """Test valid numeric input passes."""
-    assert validate_numeric_input(42.0) == 42.0
-    assert validate_numeric_input(0) == 0.0
-    assert validate_numeric_input(-5) == -5.0
+def test_batch_rejects_same_file(tmp_path):
+    source = tmp_path / "source.csv"
+    source.write_text("mallampati\n2\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="must differ"):
+        process_batch(str(source), str(source))
 
 
-def test_validate_numeric_input_nan():
-    """Test NaN input raises ValueError."""
-    import math
-    with pytest.raises(ValueError, match="must be a finite number"):
-        validate_numeric_input(float("nan"))
+def test_batch_rejects_missing_grade_columns(tmp_path):
+    source = tmp_path / "source.csv"
+    source.write_text("identifier,noise\na,b\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="needs a mallampati"):
+        process_batch(str(source), str(tmp_path / "out.csv"))
 
 
-def test_validate_numeric_input_inf():
-    """Test infinity input raises ValueError."""
-    with pytest.raises(ValueError, match="must be a finite number"):
-        validate_numeric_input(float("inf"))
+def test_batch_rejects_extra_cells(tmp_path):
+    source = tmp_path / "source.csv"
+    source.write_text("mallampati\n2,extra\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="extra columns"):
+        process_batch(str(source), str(tmp_path / "out.csv"))
 
 
-def test_validate_numeric_input_out_of_bounds():
-    """Test out of bounds input raises ValueError."""
-    with pytest.raises(ValueError, match="exceeds safe bounds"):
-        validate_numeric_input(99999.0)
+def test_traversal_component_rejected():
+    with pytest.raises(ValueError, match="Parent-directory"):
+        safe_file_path("../sensitive.csv")
 
 
-def test_safe_file_path_traversal():
-    """Test path traversal detection."""
-    with pytest.raises(ValueError, match="Path traversal detected"):
-        safe_file_path("../../etc/passwd")
-
-
-def test_safe_file_path_not_found():
-    """Test non-existent file detection."""
-    with pytest.raises(FileNotFoundError):
-        safe_file_path("/nonexistent/file.csv", must_exist=True)
-
-
-def test_batch_with_invalid_rows(tmp_path):
-    """Test batch processing handles invalid rows gracefully."""
-    csv_in = tmp_path / "in.csv"
-    csv_out = tmp_path / "out.csv"
-    csv_in.write_text("Patient,v1,v2\nPat_001,15.0,3.0\nPat_002,invalid,1.0\n", encoding="utf-8")
-
-    process_batch(str(csv_in), str(csv_out))
-    assert csv_out.exists()
-    content = csv_out.read_text(encoding="utf-8")
-    assert "Pat_001" in content
-    assert "Pat_002" in content
-
-
-def test_batch_missing_file():
-    """Test batch processing with missing input file raises FileNotFoundError."""
+def test_missing_input():
     with pytest.raises(FileNotFoundError):
         process_batch("/nonexistent/file.csv", "/tmp/out.csv")
+
+
+def test_cli_single(capsys):
+    assert main(["single", "--mallampati", "2", "--cormack-lehane", "3"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["mallampati_class"] == 2
+    assert result["cormack_lehane_grade"] == 3
+
+
+def test_cli_requires_grade(capsys):
+    assert main(["single"]) == 1
+    assert "At least one observed grade" in capsys.readouterr().err
