@@ -1,6 +1,6 @@
 """
 Supervisor Orchestrator & Operations Intelligence for Mallampati Cormack Airway Grader.
-Domain: Radiology & Neuroimaging Systems
+Domain: Synthetic, nonclinical threshold demonstration
 """
 import uuid
 from typing import Dict, Any, List, Optional
@@ -66,7 +66,7 @@ class SystemSupervisor:
             total_alerts=len(all_alerts),
             critical_alerts_count=crit_count,
             alerts=all_alerts,
-            consensus_summary=f"Multi-agent consensus completed with status [{overall_urgency.value}]. Total alerts: {len(all_alerts)}.",
+            consensus_summary=f"Nonclinical demonstration rules completed with status [{overall_urgency.value}]. Total alerts: {len(all_alerts)}.",
             audit_hash=audit_entry["current_hash"],
         )
 
@@ -75,5 +75,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Mallampati Cormack Airway Grader under ACR RADS / Fleischner Society / ASPECTS Guidelines: {query}"
+        prompt = f"Supervisor inquiry for Mallampati Cormack Airway Grader under synthetic nonclinical demonstration rules: {query}"
         return self.llm.invoke(prompt)
