@@ -64,7 +64,7 @@
         <p class="hint">Recorded as a separate measurement; no diagnostic cutoff is applied.</p>
         <div class="actions">
           <button type="submit">Describe grades</button>
-          <button type="button" id="reset" class="secondary">Clear</button>
+          <button type="button" id="clear-button" class="secondary">Clear</button>
         </div>
         <p id="error" role="alert"></p>
       </form>
@@ -149,7 +149,7 @@ form.addEventListener("submit", (event) => {
   results.replaceChildren(dl);
   exportButton.disabled = false;
 });
-document.getElementById("reset").addEventListener("click", () => {
+document.getElementById("clear-button").addEventListener("click", () => {
   form.reset();
   error.textContent = "";
   results.textContent = "Select at least one observed grade and choose “Describe grades.”";
