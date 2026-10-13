@@ -13,6 +13,14 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
+_SIGNED_FIELDS = ("audit_id", "timestamp", "actor", "actor_tier", "event_type", "payload_hash", "prev_hash")
+
+
+def _serialize_for_signature(entry: Dict[str, Any]) -> str:
+    """Unambiguously serialize audit fields; delimiters inside values are safe."""
+    return json.dumps([entry[key] for key in _SIGNED_FIELDS], separators=(",", ":"), ensure_ascii=False)
+
+
 PHI_PATTERNS = [
     re.compile(r"\b(?:MRN|mrn)[:#\s-]*\d{4,10}\b", re.IGNORECASE),
     re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
@@ -77,8 +85,6 @@ class AuditTrail:
         audit_id = f"AUDIT-{int(time.time()*1000)}-{len(self.logs)+1}"
         ts = datetime.now(timezone.utc).isoformat()
         prev_hash = self.logs[-1]["current_hash"] if self.logs else "GENESIS_BLOCK_0000000000000000"
-        sign_string = f"{audit_id}|{ts}|{actor}|{actor_tier}|{event_type}|{payload_hash}|{prev_hash}"
-        signature = hmac.new(self.secret_key, sign_string.encode("utf-8"), hashlib.sha256).hexdigest()
         entry = {
             "audit_id": audit_id,
             "timestamp": ts,
@@ -87,10 +93,13 @@ class AuditTrail:
             "event_type": event_type,
             "payload_hash": payload_hash,
             "prev_hash": prev_hash,
-            "current_hash": signature,
         }
+        signed = _serialize_for_signature(entry)
+        entry["current_hash"] = hmac.new(
+            self.secret_key, signed.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
         self.logs.append(entry)
-        return entry
+        return dict(entry)
 
     def verify_integrity(self) -> bool:
         """Verify each HMAC and predecessor link; detects mutation, not tail truncation."""
@@ -99,10 +108,7 @@ class AuditTrail:
             try:
                 if entry["prev_hash"] != previous:
                     return False
-                signed = "|".join(str(entry[key]) for key in (
-                    "audit_id", "timestamp", "actor", "actor_tier",
-                    "event_type", "payload_hash", "prev_hash"
-                ))
+                signed = _serialize_for_signature(entry)
                 expected = hmac.new(self.secret_key, signed.encode("utf-8"), hashlib.sha256).hexdigest()
                 if not hmac.compare_digest(expected, entry["current_hash"]):
                     return False
