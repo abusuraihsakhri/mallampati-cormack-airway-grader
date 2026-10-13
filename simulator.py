@@ -1,14 +1,10 @@
 """
-Distributed Component High-Throughput Traffic & Stress Testing Simulator for Mallampati Cormack Airway Grader.
+Nonclinical, synthetic traffic stress-test simulator for Mallampati Cormack Airway Grader.
 """
 import os
 import time
 import random
 import sys
-
-# Set default audit key for simulator if not provided
-if not os.getenv("AUDIT_SECRET_KEY"):
-    os.environ["AUDIT_SECRET_KEY"] = "simulator-dev-key-change-in-production-2026"
 
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
@@ -62,8 +58,8 @@ def run_simulation(iterations: int = 100):
     print(f"  Elapsed Time:              {elapsed:.3f} seconds ({iterations/max(0.001, elapsed):.1f} tasks/sec)")
     print(f"  Routine Outcomes:          {nominal_count} ({nominal_count/iterations*100:.1f}%)")
     print(f"  Elevated Risk Outcomes:    {elevated_count} ({elevated_count/iterations*100:.1f}%)")
-    print(f"  Critical Interventions:    {critical_count} ({critical_count/iterations*100:.1f}%)")
-    print(f"  Adversarial PHI Intercepts:{phi_blocked_count} (100% Interception Rate)")
+    print(f"  Critical Demo Flags:    {critical_count} ({critical_count/iterations*100:.1f}%)")
+    print(f"  Adversarial PHI Intercepts:{phi_blocked_count} (synthetic pattern tests only)")
     print(f"  HMAC Audit Ledger Blocks:  {len(AuditLogger.get_trail())}")
     print(f"  HMAC Cryptographic Check:  {AuditLogger.verify_integrity()}")
     print("=" * 70)
