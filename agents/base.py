@@ -1,5 +1,5 @@
 """
-Enterprise Security, PHI Outbound Guard, and HMAC-SHA256 Audit Trail.
+Limited identifier pattern filter and in-memory HMAC-SHA256 audit trail.
 
 """
 import os
@@ -8,9 +8,18 @@ import json
 import time
 import hmac
 import hashlib
+import copy
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
+
+_SIGNED_FIELDS = ("audit_id", "timestamp", "actor", "actor_tier", "event_type", "payload_hash", "prev_hash")
+
+
+def _serialize_for_signature(entry: Dict[str, Any]) -> str:
+    """Unambiguously serialize audit fields; delimiters inside values are safe."""
+    return json.dumps([entry[key] for key in _SIGNED_FIELDS], separators=(",", ":"), ensure_ascii=False)
+
 
 PHI_PATTERNS = [
     re.compile(r"\b(?:MRN|mrn)[:#\s-]*\d{4,10}\b", re.IGNORECASE),
@@ -24,7 +33,7 @@ PHI_PATTERNS = [
 
 
 class SecurityException(Exception):
-    """Raised when outbound data violates HIPAA Safe Harbor or contains raw PHI."""
+    """Raised when one of the limited configured identifier patterns is detected."""
     pass
 
 
@@ -69,14 +78,13 @@ class AuditTrail:
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        payload_str = json.dumps(details, sort_keys=True)
-        assert_no_phi(payload_str)
+        payload_str = json.dumps(details, sort_keys=True, allow_nan=False)
+        for value in (actor, actor_tier, event_type, payload_str):
+            assert_no_phi(value)
         payload_hash = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()
         audit_id = f"AUDIT-{int(time.time()*1000)}-{len(self.logs)+1}"
         ts = datetime.now(timezone.utc).isoformat()
         prev_hash = self.logs[-1]["current_hash"] if self.logs else "GENESIS_BLOCK_0000000000000000"
-        sign_string = f"{audit_id}|{ts}|{actor}|{actor_tier}|{event_type}|{payload_hash}|{prev_hash}"
-        signature = hmac.new(self.secret_key, sign_string.encode("utf-8"), hashlib.sha256).hexdigest()
         entry = {
             "audit_id": audit_id,
             "timestamp": ts,
@@ -85,37 +93,56 @@ class AuditTrail:
             "event_type": event_type,
             "payload_hash": payload_hash,
             "prev_hash": prev_hash,
-            "current_hash": signature,
         }
+        signed = _serialize_for_signature(entry)
+        entry["current_hash"] = hmac.new(
+            self.secret_key, signed.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
         self.logs.append(entry)
-        return entry
+        return dict(entry)
 
     def verify_integrity(self) -> bool:
-        for i, entry in enumerate(self.logs):
-            prev = self.logs[i-1]["current_hash"] if i > 0 else "GENESIS_BLOCK_0000000000000000"
-            if entry["prev_hash"] != prev:
+        """Verify each HMAC and predecessor link; detects mutation, not tail truncation."""
+        previous = "GENESIS_BLOCK_0000000000000000"
+        for entry in self.logs:
+            try:
+                if entry["prev_hash"] != previous:
+                    return False
+                signed = _serialize_for_signature(entry)
+                expected = hmac.new(self.secret_key, signed.encode("utf-8"), hashlib.sha256).hexdigest()
+                if not hmac.compare_digest(expected, entry["current_hash"]):
+                    return False
+                previous = entry["current_hash"]
+            except (KeyError, TypeError, ValueError):
                 return False
         return True
 
     def get_trail(self) -> List[Dict[str, Any]]:
-        return self.logs
+        return copy.deepcopy(self.logs)
 
 
-GLOBAL_AUDIT = AuditTrail()
+GLOBAL_AUDIT: Optional[AuditTrail] = None
 
 
 class AuditLogger:
     @staticmethod
+    def _audit() -> AuditTrail:
+        global GLOBAL_AUDIT
+        if GLOBAL_AUDIT is None:
+            GLOBAL_AUDIT = AuditTrail()
+        return GLOBAL_AUDIT
+
+    @staticmethod
     def log(actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        return GLOBAL_AUDIT.log(actor, actor_tier, event_type, details)
+        return AuditLogger._audit().log(actor, actor_tier, event_type, details)
 
     @staticmethod
     def get_trail() -> List[Dict[str, Any]]:
-        return GLOBAL_AUDIT.get_trail()
+        return AuditLogger._audit().get_trail()
 
     @staticmethod
     def verify_integrity() -> bool:
-        return GLOBAL_AUDIT.verify_integrity()
+        return AuditLogger._audit().verify_integrity()
 
 
 class ActionExecutor:

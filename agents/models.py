@@ -1,7 +1,7 @@
 """
 Pydantic v2 schemas and data definitions for Mallampati Cormack Airway Grader.
-Domain: Radiology & Neuroimaging Systems
-Standard: ACR RADS / Fleischner Society / ASPECTS Guidelines
+Domain: Synthetic, nonclinical threshold demonstration
+Standard: No validated clinical guideline; demonstration only
 """
 import datetime
 from enum import Enum
@@ -23,11 +23,11 @@ class SystemIntegrityStatus(str, Enum):
 
 class SystemTaskPayload(BaseModel):
     task_id: str = Field(..., description="Unique task / case identifier")
-    target_identifier: str = Field(..., description="Entity, patient key, or genomic/cryptographic target")
-    primary_metric: float = Field(..., description="Primary domain measurement or score")
-    secondary_metric: float = Field(default=0.0, description="Secondary kinetic or confidence score")
+    target_identifier: str = Field(..., description="Synthetic demonstration target identifier")
+    primary_metric: float = Field(..., allow_inf_nan=False, description="Primary domain measurement or score")
+    secondary_metric: float = Field(default=0.0, allow_inf_nan=False, description="Secondary kinetic or confidence score")
     status_descriptor: str = Field(default="NOMINAL", description="Status code or phenotype descriptor")
-    is_critical_flag: bool = Field(default=False, description="Emergency escalation or high priority trigger")
+    is_critical_flag: bool = Field(default=False, description="Synthetic flagged condition for test runs")
     attributes: Dict[str, Any] = Field(default_factory=dict, description="Metadata key-value pairs")
     timestamp: str = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
@@ -39,7 +39,7 @@ class AgentAlert(BaseModel):
     summary: str
     technical_details: str
     actionable_remediation: str
-    standard_reference: str = "ACR RADS / Fleischner Society / ASPECTS Guidelines"
+    standard_reference: str = "No validated clinical guideline; demonstration only"
     timestamp: str = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     def to_dict(self) -> Dict[str, Any]:
@@ -49,7 +49,7 @@ class AgentAlert(BaseModel):
 class ConsensusDossier(BaseModel):
     dossier_id: str
     system_slug: str = "mallampati-cormack-airway-grader"
-    domain: str = "Radiology & Neuroimaging Systems"
+    domain: str = "Synthetic nonclinical threshold demonstration"
     task_id: str
     target_identifier: str
     overall_urgency: UrgencyLevel
@@ -57,7 +57,7 @@ class ConsensusDossier(BaseModel):
     total_alerts: int
     critical_alerts_count: int
     alerts: List[AgentAlert]
-    standard_reference: str = "ACR RADS / Fleischner Society / ASPECTS Guidelines"
+    standard_reference: str = "No validated clinical guideline; demonstration only"
     consensus_summary: str
     audit_hash: str
     timestamp: str = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())

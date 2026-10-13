@@ -1,6 +1,6 @@
 """
-Enrichment Feature Implementation for mallampati-cormack-airway-grader.
-Generated based on domain-specific requirements in specifications.
+Experimental, synthetic enrichment demonstrations. Not clinical decision support.
+These numerical thresholds have no validated clinical meaning.
 """
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple
@@ -39,13 +39,13 @@ class EnrichmentmdEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"specifications: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"specifications: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = EnrichmentmdEngineResult(
             feature_name="specifications",
@@ -89,13 +89,13 @@ class LongitudinalScoreTrackingEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Longitudinal Score Tracking: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Longitudinal Score Tracking: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = LongitudinalScoreTrackingEngineResult(
             feature_name="Longitudinal Score Tracking",
@@ -139,13 +139,13 @@ class EhrfhirIntegrationEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"EHR/FHIR Integration: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"EHR/FHIR Integration: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = EhrfhirIntegrationEngineResult(
             feature_name="EHR/FHIR Integration",
@@ -189,13 +189,13 @@ class VisualDashboardEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Visual Dashboard: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Visual Dashboard: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = VisualDashboardEngineResult(
             feature_name="Visual Dashboard",
@@ -239,13 +239,13 @@ class AlertEscalationEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Alert Escalation: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Alert Escalation: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = AlertEscalationEngineResult(
             feature_name="Alert Escalation",
@@ -289,13 +289,13 @@ class PatientStratificationEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Patient Stratification: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Patient Stratification: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = PatientStratificationEngineResult(
             feature_name="Patient Stratification",
@@ -339,13 +339,13 @@ class CrossinstitutionalAnalyticsEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Cross-Institutional Analytics: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Cross-Institutional Analytics: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = CrossinstitutionalAnalyticsEngineResult(
             feature_name="Cross-Institutional Analytics",
@@ -389,13 +389,13 @@ class AutomatedReportingEngine:
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
             alerts.append(f"Automated Reporting: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            recs.append("Review synthetic threshold configuration; not for patient management.")
         elif primary_value > self.threshold:
             status = "WARNING"
             alerts.append(f"Automated Reporting: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            recs.append("Review demonstration thresholds; not for patient monitoring.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("Synthetic demo value is below its configurable threshold.")
 
         res = AutomatedReportingEngineResult(
             feature_name="Automated Reporting",

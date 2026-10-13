@@ -4,25 +4,20 @@ Command Line Interface for Mallampati Cormack Airway Grader.
 import argparse
 import csv
 import json
-import os
 import sys
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger
 
-# Set default audit key for CLI if not provided
-if not os.getenv("AUDIT_SECRET_KEY"):
-    os.environ["AUDIT_SECRET_KEY"] = "cli-dev-key-change-in-production-2026"
-
 supervisor = SystemSupervisor(model_provider="mock")
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="mallampati-cormack-airway-grader", description="Mallampati Cormack Airway Grader")
+    parser = argparse.ArgumentParser(prog="mallampati-cormack-airway-grader", description="Experimental nonclinical rule-engine CLI (use airway_grader.py for observed grades)")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Audit
-    p_audit = subparsers.add_parser("audit", help="Run single task evaluation")
+    p_audit = subparsers.add_parser("audit", help="Run a nonclinical demonstration task")
     p_audit.add_argument("--task-id", default="TASK-2026-001")
     p_audit.add_argument("--target", default="KEY-TARGET-01")
     p_audit.add_argument("--primary", type=float, default=28.5)
@@ -61,7 +56,7 @@ def main(argv=None):
         dossier = supervisor.process_task(payload)
         print("=" * 80)
         print(f"  MALLAMPATI CORMACK AIRWAY GRADER")
-        print(f"  Domain: Radiology & Neuroimaging Systems | Standard: ACR RADS / Fleischner Society / ASPECTS Guidelines")
+        print(f"  DEMONSTRATION ONLY — arbitrary thresholds, not clinically validated")
         print(f"  Dossier ID: {dossier.dossier_id} | Urgency: [{dossier.overall_urgency.value}]")
         print("=" * 80)
         for a in dossier.alerts:

@@ -1,17 +1,9 @@
-version: '3.8'
-
 services:
   mallampati-cormack-airway-grader:
     build: .
-    container_name: mallampati-cormack-airway-grader
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
-      - AUDIT_SECRET_KEY=mallampati-cormack-airway-grader-prod-audit-key-2026
-      - MODEL_PROVIDER=mock
+      AUDIT_SECRET_KEY: ${AUDIT_SECRET_KEY:?Define AUDIT_SECRET_KEY in your environment}
+      API_ACCESS_TOKEN: ${API_ACCESS_TOKEN:?Define API_ACCESS_TOKEN in your environment}
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3

@@ -1,204 +1,70 @@
-# Mallampati Cormack Airway Grader
+# Mallampati & Cormack–Lehane Airway Grader
 
-> **Domain:** Diagnostic Radiology & Medical Imaging AI
-> **Reference Guidelines & Standards:** `American College of Radiology (ACR) RADS & Fleischner Society`
+A compact, descriptive airway grading reference. Report **modified Mallampati class I–IV** and **original Cormack–Lehane grade I–IV** independently, with an optional measured thyromental distance. There is **no composite risk score, validated difficult-intubation probability, or treatment recommendation**.
 
-<div align="center">
+## Browser application
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+Open `web/index.html` in a modern browser, select one or both observed grades, and choose **Describe grades**. The page can export a local CSV of the result. It has no package dependencies, backend requirement, external scripts, or remote API calls. GitHub Pages deployment is defined in `.github/workflows/pages.yml` (deployment status must be verified separately).
 
-</div>
+**Privacy:** Browser inputs remain on the device; this page neither transmits nor stores them. Do not enter identifiable patient data. CSV downloads are saved locally using your browser.
 
----
+## Grading definitions
 
-## 📖 What It Does
+| Grade | Modified Mallampati (preoperative mouth examination) | Original Cormack–Lehane (view during direct laryngoscopy) |
+|---|---|---|
+| I | Soft palate, fauces, uvula and pillars visible | Full view of glottis |
+| II | Soft palate, fauces and uvula visible | Partial view of glottis |
+| III | Soft palate and base of uvula visible | Epiglottis visible; glottis not seen |
+| IV | Hard palate only | Neither glottis nor epiglottis visible |
 
-Airway Assessment (Mallampati & Cormack-Lehane)
-Combines modified Mallampati, thyromental distance, and Cormack-Lehane grade for difficult intubation risk.
+The modified Mallampati assessment is conventionally performed seated, with the mouth open and tongue protruded, without phonation. Cormack–Lehane is an **observed laryngoscopic view**, not an interchangeable preoperative score. Grade IIa/IIb subdivisions of the modified Cormack–Lehane system are **not** implemented.
 
-Zero-dependency Python implementation with single and batch evaluation.
-Author: Dr. Abu Suraih Sakhri
-License: MIT
+A thyromental-distance value, when provided, is preserved as a measurement only. This application does not determine intubation difficulty, airway management, or urgency. Airway decisions require full clinical assessment and applicable local protocols.
 
----
+Sources: [Modified Mallampati overview (PubMed)](https://pubmed.ncbi.nlm.nih.gov/30171286/) and [laryngoscopy grading definitions (PMC)](https://pubmed.ncbi.nlm.nih.gov/6507827/).
 
-## ⚙️ Key Capabilities & Algorithmic Modules
+## Python CLI
 
-### 🔬 Analytical Functions
-
-- **`calculate_metrics()`**: Core domain algorithm for airway grading with weighted scoring.
-- **`process_single()`** — Evaluates a single case with provided parameters.
-- **`process_batch()`** — Processes CSV files with multiple records.
-- **`main()`** — CLI entry point for single and batch operations.
-
-### 🏗️ Enterprise Architecture
-
-- **Multi-Agent Supervisor System**: Coordinates specialized workers for comprehensive evaluation.
-- **PHI Outbound Guard**: Prevents protected health information from leaving the system.
-- **HMAC-SHA256 Audit Trail**: Tamper-evident cryptographic logging of all operations.
-- **FastAPI REST API**: OpenAPI 3.1 compatible REST endpoints.
-- **Prometheus Metrics**: Operational telemetry export.
-
----
-
-## 📐 Mathematical Formulation & Logic
-
-The core algorithm computes a weighted score from input parameters:
-
-```text
-score = v1 + v2 * (1/2) + v3 * (1/3) + ...
-```
-
-Classification tiers:
-- **Low / Standard** (score < 10.0): Standard monitoring
-- **Moderate / Intermediate** (10.0 ≤ score < 25.0): Close observation
-- **High / Severe** (score ≥ 25.0): Urgent clinical intervention
-
----
-
-## 💻 Installation
+The core grading utility uses Python 3.10+ and the standard library only.
 
 ```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/mallampati-cormack-airway-grader.git
-cd mallampati-cormack-airway-grader
-
-# Install dependencies
-pip install fastapi uvicorn pydantic pytest
-
-# Set audit key (required for production)
-export AUDIT_SECRET_KEY="your-secure-audit-key-min-16-chars"
+python airway_grader.py single --mallampati 2 --cormack-lehane 3 --thyromental-distance-cm 6.5
+python airway_grader.py batch --input sample.csv --output results.csv
 ```
 
----
+Batch files use the headings `mallampati`, `cormack_lehane` and optionally `thyromental_distance_cm`. At least one grade column is required. Invalid rows receive error messages rather than invented grades. Other input columns are retained locally; avoid patient identifiers and untrusted spreadsheet formulas. The maximum accepted batch size is 100,000 rows.
 
-## 💻 CLI Quickstart & Usage
+The CLI reports human-readable anatomical descriptions in JSON or CSV without combining grades or making clinical predictions.
 
-### 1. Single Case Evaluation
-```bash
-python airway_grader.py single --v1 14.5 --v2 4.2 --v3 1.8
-```
-
-### 2. Batch CSV Processing
-```bash
-python airway_grader.py batch -i sample.csv -o results.csv
-```
-
-### 3. Enterprise CLI with Audit Trail
-```bash
-# Set audit key
-export AUDIT_SECRET_KEY="your-secure-audit-key"
-
-# Run audit
-python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
-
-# Batch processing
-python cli.py batch -i sample.csv -o results.csv
-
-# Verify audit trail
-python cli.py verify-audit
-
-# Start API server
-python cli.py serve --host 127.0.0.1 --port 8000
-```
-
-### Parameter Reference
-- `--v1`: Primary parameter (Mallampati score)
-- `--v2`: Secondary parameter (thyromental distance)
-- `--v3`: Tertiary parameter (Cormack-Lehane grade)
-
-### Input Data Schema
-
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `Patient_ID` | Patient identifier | Required |
-| `v1` | Primary measurement (Mallampati) | Required |
-| `v2` | Secondary measurement (thyromental distance) | Required |
-| `v3` | Tertiary measurement (Cormack-Lehane) | Optional |
-
----
-
-## 🛡️ Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs for every evaluation.
-* **Input Validation:** Bounds checking and sanitization for all numeric inputs.
-* **Path Traversal Protection:** File path validation prevents directory traversal attacks.
-* **Configurable Audit Key:** Secure key management via environment variable.
-
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+## Optional local FastAPI service
 
 ```bash
-# Set test audit key
-export AUDIT_SECRET_KEY="test-audit-key-for-testing-only"
-
-# Run all tests
-pytest -v
-
-# Run specific test files
-pytest test_airway_grader.py -v
-pytest tests/ -v
+python -m pip install -r requirements.txt
+python -m uvicorn agents.api:app --host 127.0.0.1 --port 8000
 ```
 
-Execute high-throughput batch simulation benchmarks:
+`POST /api/grade` accepts JSON such as:
+
+```json
+{"mallampati": 2, "cormack_lehane": 3, "thyromental_distance_cm": 6.5}
+```
+
+OpenAPI documentation is generated by FastAPI at `/docs` and `/openapi.json`. The separate `/api/audit`, `/api/chat`, `/api/audit/logs`, and `/metrics` endpoints belong to a **legacy synthetic rule-engine demonstration** and do not implement validated airway guidance. They require an explicit `AUDIT_SECRET_KEY` (at least 16 characters) and `API_ACCESS_TOKEN`; requests must include `Authorization: Bearer <token>`. No remote language-model integration is implemented; provider aliases return mock results.
+
+The legacy PHI filter only checks specific regular-expression patterns; **it is not a HIPAA compliance guarantee, complete de-identification system, or authorization mechanism**. The HMAC audit trail is held in process memory, detects alteration of existing signed records, and is not durable or protected against truncation after restart. Do not deploy the demonstration API on an untrusted network without further security review.
+
+## Development and container
 
 ```bash
-python simulator.py 1000
+python -m pip install -r requirements-dev.txt
+AUDIT_SECRET_KEY="local-test-secret-with-adequate-length" python -m pytest -q
+docker build -t airway-grading-reference .
 ```
 
----
+For an optional local container, set `AUDIT_SECRET_KEY` and `API_ACCESS_TOKEN` in your environment (see `.env.example`), then run `docker compose up --build`. The example Compose configuration binds to localhost only. Never commit real credentials.
 
-## 🐳 Container Deployment
+CI tests Python 3.10–3.12, validates the browser script's syntax, audits Python dependencies, and builds the container. The browser uses native HTML/CSS/JavaScript; **Pyodide is not necessary**.
 
-```bash
-docker build -t mallampati-cormack-airway-grader .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY="your-secure-key" mallampati-cormack-airway-grader
-```
+## License
 
----
-
-## 📁 Project Structure
-
-```
-mallampati-cormack-airway-grader/
-├── airway_grader.py          # Core grading algorithm
-├── cli.py                    # Enterprise CLI interface
-├── simulator.py              # Load testing simulator
-├── enrichment.py             # Feature enrichment modules
-├── sample.csv                # Sample input data
-├── test_airway_grader.py     # Core algorithm tests
-├── agents/
-│   ├── __init__.py           # Package initialization
-│   ├── api.py                # FastAPI REST server
-│   ├── base.py               # Security, PHI guard, audit trail
-│   ├── models.py             # Pydantic data models
-│   ├── supervisor.py         # Multi-agent orchestrator
-│   ├── workers.py            # Specialized evaluation workers
-│   ├── llm_factory.py        # LLM integration factory
-│   ├── learning.py           # Bayesian calibration engine
-│   ├── metrics.py            # Prometheus metrics collector
-│   └── streamer.py           # WebSocket telemetry broadcaster
-├── tests/
-│   ├── test_mallampati_cormack_airway_grader.py
-│   └── test_enrichment.py
-├── web/
-│   └── index.html            # Operations console UI
-├── Dockerfile
-├── docker-compose.yml
-└── LICENSE
-```
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
